@@ -11,13 +11,23 @@ from sklearn.model_selection import train_test_split
 from torch.nn import CrossEntropyLoss
 from torch.optim import Adam
 from imblearn.over_sampling import RandomOverSampler
-from sklearn.metrics import brier_score_loss, log
+from torch.nn.functional import softmax, one_hot
+
+def brier_score_tensor(logits, categorical_labels):
+    class_probs = softmax(logits, dim = 1)
+    one_hot_labels =  one_hot(categorical_labels.long(), num_classes = class_probs.shape[1])
+    class_probs = class_probs.detach().cpu().numpy()
+    one_hot_labels = one_hot_labels.detach().cpu().numpy()
+    # print(class_probs.shape, one_hot_labels.shape)
+    # print(class_probs[0], one_hot_labels[0])
+    return np.mean(np.sum((class_probs - one_hot_labels)**2, axis=1))
     
 
 def train_epoch(epoch, model, train_loader, criterion, optimizer, device):
     total_loss = 0
     correct = 0
     total = 0
+    total_bs = 0
     model.train()
     # For loop through all batches
     for features, labels in tqdm(train_loader):
@@ -31,6 +41,7 @@ def train_epoch(epoch, model, train_loader, criterion, optimizer, device):
         # Forward pass
         outputs = model(features)
         loss = criterion(outputs, labels)
+        # print(outputs.shape, labels.shape)
         
         # Backward pass
         loss.backward()
@@ -42,19 +53,28 @@ def train_epoch(epoch, model, train_loader, criterion, optimizer, device):
         correct += predicted.eq(labels).sum().item()
         total += labels.size(0)
         
+        # batch BS
+        batch_bs = brier_score_tensor(outputs, labels)
+        # print(batch_bs)
+        total_bs += batch_bs
+        
+        
     # Averaging the loss for the whole epoch
     train_loss = total_loss / len(train_loader)
     train_acc = (correct / total) * 100.
     
-    #ME
-    me = (100 - train_acc)/100
+    # epoch's average ME
+    train_me = 100 - train_acc
+    # epoch's average BS
+    train_bs = total_bs/len(train_loader)
     
-    return train_loss, train_acc
+    return train_loss, train_acc, train_me, train_bs
 
 def val_epoch(epoch, model, val_loader, criterion, device):
     total_loss = 0
     correct = 0
     total = 0
+    total_bs = 0
     
     # For loop through all batches
     with torch.no_grad():
@@ -72,11 +92,22 @@ def val_epoch(epoch, model, val_loader, criterion, device):
             _, predicted = outputs.max(1)
             correct += predicted.eq(labels).sum().item()
             total  += labels.size(0)
+            
+            # batch BS
+            batch_bs = brier_score_tensor(outputs, labels)
+            # print(batch_bs)
+            total_bs += batch_bs
+            
         # Averaging the loss for the whole epoch
         val_loss = total_loss / len(val_loader)
         val_acc = (correct / total) * 100
+        
+        # epoch's average ME
+        val_me = (100 - val_acc)
+        # epoch's average BS
+        val_bs = total_bs/len(val_loader)
          
-    return val_loss, val_acc
+    return val_loss, val_acc, val_me, val_bs
             
     
 
@@ -95,16 +126,16 @@ def run(fold, train_loader, val_loader, model, criterion, optimizer, config):
     for epoch in range(1, n_epochs + 1):
         print(f'Epoch {epoch}/{n_epochs} of fold {fold}')
         
-        train_loss, train_acc = train_epoch(epoch, model, train_loader, criterion, optimizer, config['device'])
-        val_loss, val_acc = val_epoch(epoch, model, val_loader, criterion, config['device'])
+        train_loss, train_acc, train_me, train_bs = train_epoch(epoch, model, train_loader, criterion, optimizer, config['device'])
+        val_loss, val_acc, val_me, val_bs = val_epoch(epoch, model, val_loader, criterion, config['device'])
         
         history['train_accs'].append(train_acc)
         history['train_losses'].append(train_loss)
         history['val_accs'].append(val_acc)
         history['val_losses'].append(val_loss)
         
-        print('train_loss: %.5f | train_acc: %.3f' % (train_loss, train_acc))
-        print('val_loss: %.5f | val_acc: %.3f' % (val_loss, val_acc))
+        print('train_loss: %.5f | train_acc: %.3f | train_me: %.3f | train_bs: %.3f' % (train_loss, train_acc, train_me, train_bs))
+        print('val_loss: %.5f | val_acc: %.3f | val_me: %3f | val_bs: %.3f' % (val_loss, val_acc, val_me, val_bs))
         
         if val_acc == max(history['val_accs']):
             print('Best validation accuracy => saving model weights...')
