@@ -1,0 +1,3 @@
+[1]: How do I calculate cross-entropy from probabilities in PyTorch? (https://stackoverflow.com/questions/60166427/how-do-i-calculate-cross-entropy-from-probabilities-in-pytorch)
+[2]: Cross entropy with logit targets (https://discuss.pytorch.org/t/cross-entropy-with-logit-targets/134068/2)
+[3]: How to calculate correct Cross Entropy between 2 tensors in Pytorch when target is not one-hot? (https://stackoverflow.com/questions/68609414/how-to-calculate-correct-cross-entropy-between-2-tensors-in-pytorch-when-target)
