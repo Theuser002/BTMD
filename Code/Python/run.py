@@ -58,17 +58,6 @@ if __name__ == "__main__":
     # Train the inner folds
     for fold in trained_folds:
         # Read from csv to dataframe
-        # train_csv_path = os.path.join(cfg['TRAIN_CSV_DIR'], f'{fold}_train.csv')
-        # test_csv_path = os.path.join(cfg['TEST_CSV_DIR'], f'{fold}_test.csv')
-        # df_train = pd.read_csv(train_csv_path, index_col = 0).fillna(0)
-        # df_test = pd.read_csv(test_csv_path, index_col = 0).fillna(0)
-        
-        # # Read from dataframe to ndarray
-        # train_features = np.array(df_train.iloc[:,:-1])
-        # train_labels = np.array(df_train.iloc[:,-1])
-        # test_features = np.array(df_test.iloc[:,:-1])
-        # test_labels = np.array(df_test.iloc[:,-1])
-        
         train_features, train_labels, test_features, test_labels = make_ndarray_from_csv(fold)
         
         # Encode the labels

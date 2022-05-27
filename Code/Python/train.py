@@ -22,13 +22,13 @@ def train_epoch(epoch, model, train_loader, criterion, optimizer, device):
     total = 0
     total_loss = 0
     total_bs = 0
-    total_auc = 0
     model.train()
+    
     # For loop through all batches
     all_labels = []
     all_logits = []
     for features, labels in tqdm(train_loader):
-        # Move tensors to GPU
+        # Move tensors to device
         features = features.to(device)
         labels = labels.to(device)
         
@@ -74,9 +74,9 @@ def train_epoch(epoch, model, train_loader, criterion, optimizer, device):
     return train_loss, train_acc, train_me, train_bs, train_auc
 
 def val_epoch(epoch, model, val_loader, criterion, device):
-    total_loss = 0
     correct = 0
     total = 0
+    total_loss = 0
     total_bs = 0
     
     # For loop through all batches
@@ -85,7 +85,7 @@ def val_epoch(epoch, model, val_loader, criterion, device):
         all_labels = []
         all_logits = []
         for features, labels in tqdm(val_loader):
-            # Move tensors to GPU
+            # Move tensors to device
             features, labels = features.to(device), labels.to(device)
             
             # Forward pass
@@ -129,9 +129,9 @@ def run(fold, train_loader, val_loader, model, criterion, optimizer, config):
     model.to(config['device'])
     n_epochs = config['n_epochs']
     BEST_STATES_DIR= config['BEST_STATES_DIR']
-    BEST_MODEL_DIR = config['BEST_MODELS_DIR']
+    BEST_MODELS_DIR = config['BEST_MODELS_DIR']
     BEST_STATE_PATH = os.path.join(BEST_STATES_DIR, f'{fold}_best_state.pth')
-    BEST_MODEL_PATH = os.path.join(BEST_MODEL_DIR, f'{fold}_best_model.pth')
+    BEST_MODEL_PATH = os.path.join(BEST_MODELS_DIR, f'{fold}_best_model.pth')
     diff_threshold = config['diff_threshold']
     max_patience = config['max_patience']
     patience = 0
@@ -150,11 +150,11 @@ def run(fold, train_loader, val_loader, model, criterion, optimizer, config):
         print('train_loss: %.5f | train_acc: %.3f | train_me: %.3f | train_bs: %.3f | train_auc: %.3f' % (train_loss, train_acc, train_me, train_bs, train_auc))
         print('val_loss: %.5f | val_acc: %.3f | val_me: %3f | val_bs: %.3f | val_auc: %.3f' % (val_loss, val_acc, val_me, val_bs, val_auc))
         
-        if val_acc == max(history['val_accs']):
-            print('Best validation accuracy => saving model weights...')
+        if val_acc == min(history['val_losses']):
+            print('Lowest validation loss => saving model weights...')
             torch.save(model.state_dict(), BEST_STATE_PATH)
-        if len(history['val_accs']) > 1:
-            if abs(history['val_accs'][-2] - val_acc) < diff_threshold or history['val_accs'][-2] > val_acc:
+        if len(history['val_losses']) > 1:
+            if abs(history['val_losses'][-2] - val_loss) < diff_threshold or history['val_losses'][-2] < val_loss:
                 patience = patience + 1
                 print(f'Patience increased to {patience}')
                 if patience == max_patience:
@@ -172,9 +172,9 @@ def run_no_save(fold, train_loader, val_loader, model, criterion, optimizer, con
     model.to(config['device'])
     n_epochs = config['n_epochs']
     BEST_STATES_DIR= config['BEST_STATES_DIR']
-    BEST_MODEL_DIR = config['BEST_MODELS_DIR']
+    BEST_MODELS_DIR = config['BEST_MODELS_DIR']
     BEST_STATE_PATH = os.path.join(BEST_STATES_DIR, f'{fold}_best_state.pth')
-    BEST_MODEL_PATH = os.path.join(BEST_MODEL_DIR, f'{fold}_best_model.pth')
+    BEST_MODEL_PATH = os.path.join(BEST_MODELS_DIR, f'{fold}_best_model.pth')
     diff_threshold = config['diff_threshold']
     max_patience = config['max_patience']
     patience = 0
