@@ -16,8 +16,5 @@ class CNS (Dataset):
         label = self.labels[idx]
         if self.mode == 'Test' or self.mode == 'test':
             return torch.tensor(feature).float()
-        # Calibration mode for training calibration model, with the labels as an tensor of class_probabilities (read the paper for better interpretation)
-        elif self.mode == 'Cal' or self.mode == 'cal':
-            return torch.tensor(feature).float(), torch.tensor(label).float()
         else:
             return torch.tensor(feature).float(), torch.tensor(label).long()

@@ -10,7 +10,7 @@ from tqdm import tqdm
 from pathlib import Path
 from pyreadr import read_r
 
-ROOT_PATH = '../../'
+ROOT_PATH = '../../../'
 DATASET_FOLDER = os.path.join(ROOT_PATH, 'Dataset')
 CSV_FOLDER_PATH = os.path.join(DATASET_FOLDER, 'csv')
 ANNO_FOLDER_PATH = os.path.join(DATASET_FOLDER, 'Anno')

@@ -1,15 +1,32 @@
-import torch
-torch.__version__
+import os
+import numpy as np
+import pandas as pd
+import config
 
-# def softXEnt (input, target):
-#     logprobs = torch.nn.functional.log_softmax (input, dim = 1)
-#     return  -(target * logprobs).sum() / input.shape[0]
+from torch.nn.functional import softmax, one_hot
 
-class softXEnt ():
-    def __init__ (self):
-        self
-        
-    def __call__ (self, input, target):
-        print(input.shape, target.shape)
-        logprobs = torch.nn.functional.log_softmax (input, dim = 1)
-        return  -(target * logprobs).sum() / input.shape[0] 
+def brier_score_tensor(logits, categorical_labels):
+    class_probs = softmax(logits, dim = 1)
+    one_hot_labels =  one_hot(categorical_labels.long(), num_classes = class_probs.shape[1])
+    class_probs = class_probs.detach().cpu().numpy()
+    one_hot_labels = one_hot_labels.detach().cpu().numpy()
+    return np.mean(np.sum((class_probs - one_hot_labels)**2, axis=1))
+
+def make_ndarray_from_csv(fold, mode = 'None'):
+    cfg = config.config_dict
+    train_csv_path = os.path.join(cfg['TRAIN_CSV_DIR'], f'{fold}_train.csv')
+    test_csv_path = os.path.join(cfg['TEST_CSV_DIR'], f'{fold}_test.csv')
+    df_train = pd.read_csv(train_csv_path, index_col = 0).fillna(0)
+    df_test = pd.read_csv(test_csv_path, index_col = 0).fillna(0)
+    
+    # Read from dataframe to ndarray
+    train_features = np.array(df_train.iloc[:,:-1])
+    train_labels = np.array(df_train.iloc[:,-1])
+    test_features = np.array(df_test.iloc[:,:-1])
+    test_labels = np.array(df_test.iloc[:,-1])
+    if mode == 'Train':
+        return train_features, train_labels
+    elif mode == 'Test':
+        return test_features, test_labels
+    else:
+        return train_features, train_labels, test_features, test_labels
