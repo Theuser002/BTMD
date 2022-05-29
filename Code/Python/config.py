@@ -17,8 +17,8 @@ config_dict = {
     'BEST_MODELS_DIR': os.path.join(root_dir, 'Saved_models', 'Best_models'),
         # Calibration model:
     'CALIBRATE_CSV_DIR': os.path.join(root_dir, 'Dataset', 'csv', 'calibrate'),
-    'BEST_CAL_STATES_DIR': os.path.join(root_dir, 'Saved_models', 'Best_calibration_weights'),
-    'BEST_CAL_MODELS_DIR': os.path.join(root_dir, 'Saved_models', 'Best_calibration_models'),
+    'CAL_BEST_STATES_DIR': os.path.join(root_dir, 'Saved_models', 'Best_calibration_weights'),
+    'CAL_BEST_MODELS_DIR': os.path.join(root_dir, 'Saved_models', 'Best_calibration_models'),
     
     # Hyperparams
         # General:
@@ -32,19 +32,19 @@ config_dict = {
     'train_batch_size': 8,
     'val_batch_size': 16,
     'test_batch_size': 16,
-    'FIRST_TIME': True,
+    'FIRST_TIME': False,
     'diff_threshold': 1e-3,
     'max_patience': 3,
         # Calibration model:
     'cal_n_features': 91,
     'cal_n_classes': 91,
-    'cal_n_epochs': 20,
-    'cal_lr': 1e-5,
+    'cal_n_epochs': 40,
+    'cal_lr': 1e-4,
     'cal_weight_decay': 0,
     'cal_train_batch_size': 8,
     'cal_val_batch_size': 16,
     'cal_test_batch_size': 16,
     'CAL_FIRST_TIME': True,
-    'cal_diff_threshold': 1e-3,
+    'cal_diff_threshold': 1e-2,
     'cal_max_patience': 3
 }

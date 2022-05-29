@@ -3,7 +3,7 @@ import torch.nn as nn
 
 class CalNet(nn.Module):
     def __init__ (self, in_features, n_classes):
-        super(TestNet, self).__init__()
+        super(CalNet, self).__init__()
         self.in_features = in_features
         self.n_classes = n_classes
         self.densenet = nn.Sequential(

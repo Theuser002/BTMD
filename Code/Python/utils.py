@@ -2,8 +2,19 @@ import os
 import numpy as np
 import pandas as pd
 import config
+import pyreadr
 
 from torch.nn.functional import softmax, one_hot
+
+def get_int_label (label):
+    cfg = config.config_dict
+    df_labels = pyreadr.read_r(cfg['R_LABELS_PATH'])['y']
+    all_labels = list(df_labels['y'])
+    int_labels_map = {label:index for index, label in enumerate(np.unique(all_labels))}
+    if label in int_labels_map.keys():
+        return int_labels_map[label]
+    else:
+        return -1 
 
 def brier_score_tensor(logits, categorical_labels):
     class_probs = softmax(logits, dim = 1)

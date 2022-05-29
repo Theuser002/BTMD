@@ -27,10 +27,6 @@ def dump_probs ():
             # Take innerfold
             fold = f'{i}.{j}'
             # print(fold)
-            # test_csv_path = os.path.join(cfg['TEST_CSV_DIR'], f'{fold}_test.csv')
-            # df_test = pd.read_csv(test_csv_path, index_col = 0).fillna(0)
-            # test_features = np.array(df_test.iloc[:,:-1])
-            # test_labels = np.array(df_test.iloc[:,-1])
             
             test_features, test_labels = make_ndarray_from_csv(fold, mode = 'test')
             
@@ -43,6 +39,7 @@ def dump_probs ():
             for feature, label in zip(test_features, test_labels):
                 feature = torch.Tensor(feature).float()
                 feature.to(cfg['device'])
+                # the logits of the model must be passed through softmax to get the classification probs
                 prob = softmax(model(feature), dim = 0)
                 prob = prob.detach().cpu().numpy()
                 all_probs.append(prob)
@@ -55,6 +52,7 @@ def dump_probs ():
     return
 
 def load_probs (outer_fold):
+    print(f'Loading classification probabilities and labels from pickle file for fold {outer_fold}')
     cfg = config.config_dict
     PICKLES_DIR = cfg['PICKLES_DIR']
     probs_pickle_filename = f'{outer_fold}_probs.pickle'
@@ -70,20 +68,20 @@ def load_probs (outer_fold):
 
 
 
-def train_epoch(epoch, model, train_loader, criterion, optimizer, device):
+def cal_train_epoch(epoch, model, cal_train_loader, criterion, optimizer, device):
     correct = 0
     total = 0
     total_loss = 0
     
-    for features, labels in tqdm(train_loader):
+    for probs, labels in tqdm(cal_train_loader):
         # Move tensors to device
-        features, labels = features.to(device), labels.to(device)
+        probs, labels = probs.to(device), labels.to(device)
         
         # Zero out gradient
         optimizer.zero_grad()
         
         # Forward pass
-        logits = model(features)
+        logits = model(probs)
         loss = criterion(logits, labels)
          
         # Backward pass
@@ -97,23 +95,23 @@ def train_epoch(epoch, model, train_loader, criterion, optimizer, device):
         total += labels.size(0)
     
     # Epoch's average loss
-    train_loss = total_loss / len(train_loader)
+    train_loss = total_loss / len(cal_train_loader)
     train_acc = (correct / total) * 100
     
     return train_loss, train_acc
 
-def val_epoch(epoch, model, val_loader, criterion, optimizer, device):
+def cal_val_epoch(epoch, model, cal_val_loader, criterion, optimizer, device):
     correct = 0
     total = 0
     total_loss = 0
     
     with torch.no_grad():
-        for features, labels in tqdm(val_loader):
+        for probs, labels in tqdm(cal_val_loader):
             # Move tensors to device
-            features, labels = features.to(device), labels.to(device)
+            probs, labels = probs.to(device), labels.to(device)
             
             # Forward pass
-            logits = model(features)
+            logits = model(probs)
             loss = criterion(logits, labels)
             
             # Calculate batch's loss
@@ -122,39 +120,39 @@ def val_epoch(epoch, model, val_loader, criterion, optimizer, device):
             correct += predicted.eq(labels).sum().item()
             total += labels.size(0)
 
-        val_loss = total_loss / len(val_loader)
+        val_loss = total_loss / len(cal_val_loader)
         val_acc = (correct / total) * 100
     
     return val_loss, val_acc
 
-def run (fold, train_loader, val_loader, model, criterion, optimizer, config):
+def cal_run (fold, cal_train_loader, cal_val_loader, model, criterion, optimizer, config):
     history = {'train_accs': [], 'train_losses': [], 'val_accs': [], 'val_losses': []}
     model.to(config['device'])
     n_epochs = config['cal_n_epochs']
-    BEST_CAL_STATES_DIR = config['BEST_CAL_STATES_DIR']
-    BEST_CAL_MODELS_DIR = config['BEST_CAL_MODELS_DIR']
-    BEST_CAL_STATES_PATH = os.path.join(BEST_CAL_STATES_DIR, f'{fold}_best_cal_state.pth')
-    BEST_CAL_MODELS_PATH = os.path.join(BEST_CAL_MODELS_DIR, f'{fold}_best_cal_model.pth')
+    CAL_BEST_STATES_DIR = config['CAL_BEST_STATES_DIR']
+    CAL_BEST_MODELS_DIR = config['CAL_BEST_MODELS_DIR']
+    CAL_BEST_STATES_PATH = os.path.join(CAL_BEST_STATES_DIR, f'{fold}_best_cal_state.pth')
+    CAL_BEST_MODELS_PATH = os.path.join(CAL_BEST_MODELS_DIR, f'{fold}_best_cal_model.pth')
     diff_threshold = config['cal_diff_threshold']
     max_patience = config['cal_max_patience']
     patience = 0
     
     for epoch in range(1, n_epochs + 1):
-        print('Epoch {epoch}/{n_epochs} of the inner folds corresponding to  outer fold {fold}')
-        train_loss, train_acc = train_epoch(epoch, model, train_loader, criterion, optimizer, device)
-        val_loss, val_acc = val_epoch(epoch, model, val_loader, criterion, optimizer, device)
+        print(f'Epoch {epoch}/{n_epochs} of the inner folds corresponding to  outer fold {fold}')
+        train_loss, train_acc = cal_train_epoch(epoch, model, cal_train_loader, criterion, optimizer, config['device'])
+        val_loss, val_acc = cal_val_epoch(epoch, model, cal_val_loader, criterion, optimizer, config['device'])
         
         history['train_accs'].append(train_acc)
         history['train_losses'].append(train_loss)
         history['val_accs'].append(val_acc)
         history['val_losses'].append(val_loss)
 
-        print('train_loss: %5.f | train_acc: %.3f' %(train_loss, train_acc))
-        print('val_loss: %5.f | val_acc: %.3f' %(val_loss, val_acc))
+        print('train_loss: %.5f | train_acc: %.3f' %(train_loss, train_acc))
+        print('val_loss: %.5f | val_acc: %.3f' %(val_loss, val_acc))
         
         if val_loss == min(history['val_losses']):
             print('Lowest validation loss => saving model weights...')
-            torch.save(model.state_dict(), BEST_CAL_STATES_PATH)
+            torch.save(model.state_dict(), CAL_BEST_STATES_PATH)
         if len(history['val_losses']) > 1:
             if abs(history['val_losses'][-2] - val_loss) < diff_threshold or history['val_losses'][-2] < val_loss:
                 patience = patience + 1
@@ -165,9 +163,47 @@ def run (fold, train_loader, val_loader, model, criterion, optimizer, config):
             else:
                 patience = 0
         print('---------------------------------------------')
-        return max(history['val_accs'])
+    return max(history['val_accs'])
+
+def cal_run_no_save (fold, cal_train_loader, cal_val_loader, model, criterion, optimizer, config):
+    history = {'train_accs': [], 'train_losses': [], 'val_accs': [], 'val_losses': []}
+    model.to(config['device'])
+    n_epochs = config['cal_n_epochs']
+    CAL_BEST_STATES_DIR = config['CAL_BEST_STATES_DIR']
+    CAL_BEST_MODELS_DIR = config['CAL_BEST_MODELS_DIR']
+    CAL_BEST_STATES_PATH = os.path.join(CAL_BEST_STATES_DIR, f'{fold}_best_cal_state.pth')
+    CAL_BEST_MODELS_PATH = os.path.join(CAL_BEST_MODELS_DIR, f'{fold}_best_cal_model.pth')
+    diff_threshold = config['cal_diff_threshold']
+    max_patience = config['cal_max_patience']
+    patience = 0
+    
+    for epoch in range(1, n_epochs + 1):
+        print(f'Epoch {epoch}/{n_epochs} of the inner folds corresponding to  outer fold {fold}')
+        train_loss, train_acc = cal_train_epoch(epoch, model, cal_train_loader, criterion, optimizer, config['device'])
+        val_loss, val_acc = cal_val_epoch(epoch, model, cal_val_loader, criterion, optimizer, config['device'])
+        
+        history['train_accs'].append(train_acc)
+        history['train_losses'].append(train_loss)
+        history['val_accs'].append(val_acc)
+        history['val_losses'].append(val_loss)
+
+        print('train_loss: %5.f | train_acc: %.3f' %(train_loss, train_acc))
+        print('val_loss: %5.f | val_acc: %.3f' %(val_loss, val_acc))
+
+        if len(history['val_losses']) > 1:
+            if abs(history['val_losses'][-2] - val_loss) < diff_threshold or history['val_losses'][-2] < val_loss:
+                patience = patience + 1
+                print(f'Patience increased to {patience}')
+                if patience == max_patience:
+                    print('Early stopping.')
+                    break
+            else:
+                patience = 0
+        print('---------------------------------------------')
+    return max(history['val_accs'])
 
 if __name__ == "__main__":
-    dump_probs()
+    # dump_probs()
     probs, labels = load_probs('1.0')
+    print(probs)
     print(len(labels))

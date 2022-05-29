@@ -22,6 +22,7 @@ def train_epoch(epoch, model, train_loader, criterion, optimizer, device):
     total = 0
     total_loss = 0
     total_bs = 0
+    model.to(device)
     model.train()
     
     # For loop through all batches
@@ -78,7 +79,7 @@ def val_epoch(epoch, model, val_loader, criterion, device):
     total = 0
     total_loss = 0
     total_bs = 0
-    
+    model.to(device)
     # For loop through all batches
     with torch.no_grad():
         # For loop through all batches
@@ -90,9 +91,9 @@ def val_epoch(epoch, model, val_loader, criterion, device):
             
             # Forward pass
             logits = model(features)
-            loss = criterion(logits, labels)
             
-            # Evaluation
+            # Evaluation and batch loss
+            loss = criterion(logits, labels)
             total_loss += loss.item()
             _, predicted = logits.max(1)
             correct += predicted.eq(labels).sum().item()
@@ -126,7 +127,8 @@ def val_epoch(epoch, model, val_loader, criterion, device):
 def run(fold, train_loader, val_loader, model, criterion, optimizer, config):
     history = {'train_accs': [], 'train_losses': [], 'val_accs': [], 'val_losses': []}
     # print(config['device'])
-    model.to(config['device'])
+    # model.to(config['device'])
+    
     n_epochs = config['n_epochs']
     BEST_STATES_DIR= config['BEST_STATES_DIR']
     BEST_MODELS_DIR = config['BEST_MODELS_DIR']
