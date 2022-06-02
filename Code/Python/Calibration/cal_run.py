@@ -43,7 +43,7 @@ if __name__ == "__main__":
         cal_train_loader = DataLoader(cal_train_dataset)
         cal_val_loader = DataLoader(cal_val_dataset)
         
-        print(len(probs), len(int_labels), len(cal_train_dataset), len(cal_val_dataset))
+        # print(len(probs), len(int_labels), len(cal_train_dataset), len(cal_val_dataset))
         
         # Init model object
         in_features = cfg['cal_n_features']

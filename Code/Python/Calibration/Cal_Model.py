@@ -13,9 +13,12 @@ class CalNet(nn.Module):
             nn.Conv2d(in_channels = 1, out_channels = 1, kernel_size = (input_shape[0], 1), padding = (0, 0)),
             nn.BatchNorm1d(1),
             nn.ReLU(),
-            nn.Dropout(p = 0.3),
+            # nn.Dropout(p = 0.3),
             nn.Flatten(),
-            nn.Linear(input_shape[1], n_classes),
+            nn.Linear(input_shape[1], 128),
+            nn.ReLU(),
+            # nn.Dropout(p = 0.5),
+            nn.Linear(128, n_classes),
             # Softmax: will be added in loss
         )
         
