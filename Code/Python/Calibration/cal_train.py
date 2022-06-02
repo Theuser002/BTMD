@@ -187,8 +187,8 @@ def cal_run_no_save (fold, cal_train_loader, cal_val_loader, model, criterion, o
         history['val_accs'].append(val_acc)
         history['val_losses'].append(val_loss)
 
-        print('train_loss: %5.f | train_acc: %.3f' %(train_loss, train_acc))
-        print('val_loss: %5.f | val_acc: %.3f' %(val_loss, val_acc))
+        print('train_loss: %.5f | train_acc: %.3f' %(train_loss, train_acc))
+        print('val_loss: %.5f | val_acc: %.3f' %(val_loss, val_acc))
 
         if len(history['val_losses']) > 1:
             if abs(history['val_losses'][-2] - val_loss) < diff_threshold or history['val_losses'][-2] < val_loss:
