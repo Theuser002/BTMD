@@ -82,7 +82,7 @@ def cal_train_epoch(epoch, model, cal_train_loader, criterion, optimizer, device
         
         # Forward pass
         logits = model(probs)
-        print(logits.detach().cpu().numpy().shape, labels.detach().cpu().numpy().shape)
+        # print(logits.detach().cpu().numpy().shape, labels.detach().cpu().numpy().shape)
         loss = criterion(logits, labels)
          
         # Backward pass
