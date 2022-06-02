@@ -47,7 +47,7 @@ if __name__ == "__main__":
         
         # Init model object
         in_features = cfg['cal_n_features']
-        cal_model = CalNet(in_features, cfg['cal_n_classes'])
+        cal_model = CalNet((cfg['n_models'], cfg['n_classes']), cfg['cal_n_classes'])
         if cfg['CAL_FIRST_TIME'] == False:
             # Load model based on fold
             CAL_BEST_STATE_PATH = os.path.join(cfg['CAL_BEST_STATES_DIR'], f'{outer_fold}_best_cal_state.pth')

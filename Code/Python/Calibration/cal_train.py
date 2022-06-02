@@ -16,35 +16,35 @@ from utils import make_ndarray_from_csv
 def dump_probs ():
     cfg = config.config_dict
     PICKLES_DIR = cfg['PICKLES_DIR']
+    device = cfg['device']
+    in_features = cfg['n_features']
+    n_classes = cfg['n_classes']
     for i in range(1, 6):
+        outer_fold = f'{i}.0'
         all_probs = []
         all_labels = []
-        probs_pickle_filename = f'{i}.0_probs.pickle'
-        labels_pickle_filename = f'{i}.0_labels.pickle'
+        probs_pickle_filename = f'{outer_fold}_combined_probs.pickle'
+        labels_pickle_filename = f'{outer_fold}_combined_labels.pickle'
         probs_pickle_filepath = os.path.join(PICKLES_DIR, probs_pickle_filename)
         labels_pickle_filepath = os.path.join(PICKLES_DIR, labels_pickle_filename)
-        for j in tqdm(range(1, 6)):
-            # Take innerfold
-            fold = f'{i}.{j}'
-            # print(fold)
-            
-            test_features, test_labels = make_ndarray_from_csv(fold, mode = 'test')
-            
-            # [Not optimized] Getting probs and labels for each sample and append to respective global lists
-            in_features = cfg['n_features']
-            model = TestNet(in_features, cfg['n_classes'])
-            BEST_STATE_PATH = os.path.join(cfg['BEST_STATES_DIR'], f'{fold}_best_state.pth')
-            model.load_state_dict(torch.load(BEST_STATE_PATH))
-            # print(len(test_labels))
-            for feature, label in zip(test_features, test_labels):
-                feature = torch.Tensor(feature).float()
-                feature.to(cfg['device'])
-                # the logits of the model must be passed through softmax to get the classification probs
-                prob = softmax(model(feature), dim = 0)
-                prob = prob.detach().cpu().numpy()
-                all_probs.append(prob)
-                all_labels.append(label)
-        
+        features, labels = make_ndarray_from_csv(outer_fold, mode = 'train')
+        for feature, label in zip(tqdm(features), labels):
+            feature = torch.Tensor(feature).float()
+            feature.to(device)
+            combined_prob = []
+            for j in range(1, 6):
+                # Take innerfold
+                inner_fold = f'{i}.{j}'
+                model = TestNet(in_features, n_classes)
+                BEST_STATE_PATH = os.path.join(cfg['BEST_STATES_DIR'], f'{inner_fold}_best_state.pth')
+                model.load_state_dict(torch.load(BEST_STATE_PATH))
+                logit = model(feature)
+                prob = softmax(logit, dim = 0).detach().cpu().numpy()
+                combined_prob.append(prob)
+            combined_prob = np.array(combined_prob)
+            all_probs.append(combined_prob)
+            all_labels.append(label)
+            # print('Cheese')
         with open (probs_pickle_filepath, 'wb') as handle:
             pickle.dump(all_probs, handle, protocol = pickle.HIGHEST_PROTOCOL)
         with open (labels_pickle_filepath, 'wb') as handle:
@@ -55,8 +55,8 @@ def load_probs (outer_fold):
     print(f'Loading classification probabilities and labels from pickle file for fold {outer_fold}')
     cfg = config.config_dict
     PICKLES_DIR = cfg['PICKLES_DIR']
-    probs_pickle_filename = f'{outer_fold}_probs.pickle'
-    labels_pickle_filename = f'{outer_fold}_labels.pickle'
+    probs_pickle_filename = f'{outer_fold}_combined_probs.pickle'
+    labels_pickle_filename = f'{outer_fold}_combined_labels.pickle'
     probs_pickle_filepath = os.path.join(PICKLES_DIR, probs_pickle_filename)
     labels_pickle_filepath = os.path.join(PICKLES_DIR, labels_pickle_filename)
     
@@ -82,6 +82,7 @@ def cal_train_epoch(epoch, model, cal_train_loader, criterion, optimizer, device
         
         # Forward pass
         logits = model(probs)
+        print(logits.detach().cpu().numpy().shape, labels.detach().cpu().numpy().shape)
         loss = criterion(logits, labels)
          
         # Backward pass
@@ -205,5 +206,7 @@ def cal_run_no_save (fold, cal_train_loader, cal_val_loader, model, criterion, o
 if __name__ == "__main__":
     # dump_probs()
     probs, labels = load_probs('1.0')
-    print(probs)
-    print(len(labels))
+    probs = np.array(probs)
+    labels = np.array(labels)
+    print(probs.shape, labels.shape)
+    print(probs[0], type(probs[0]), probs[0].shape)
