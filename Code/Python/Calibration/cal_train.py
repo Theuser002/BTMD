@@ -123,7 +123,6 @@ def cal_val_epoch(epoch, model, cal_val_loader, criterion, optimizer, device):
 
         val_loss = total_loss / len(cal_val_loader)
         val_acc = (correct / total) * 100
-    
     return val_loss, val_acc
 
 def cal_run (fold, cal_train_loader, cal_val_loader, model, criterion, optimizer, config):
