@@ -26,6 +26,7 @@ if __name__ == "__main__":
 # print(input, input.shape, type(input))
 # print(target, target.shape, type(target))
 # output = loss(input, target)
+# print(output)
 # output.backward()
 
 # labels = np.array([9, 5])
@@ -62,5 +63,5 @@ if __name__ == "__main__":
 # chain = itertools.chain(*arr)
 # print(list(chain))
 
-cfg = config.config_dict
-print(config.root_dir)
+# cfg = config.config_dict
+# print(config.root_dir)
