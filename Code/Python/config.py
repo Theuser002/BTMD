@@ -36,6 +36,7 @@ config_dict = {
     'diff_threshold': 1e-3,
     'max_patience': 3,
         # Calibration model:
+    'n_inner_folds': 5,
     'cal_n_features': 91,
     'cal_n_classes': 91,
     'cal_n_epochs': 40,
