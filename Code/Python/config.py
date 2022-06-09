@@ -8,7 +8,6 @@ config_dict = {
     # Paths:
         # General:
     'R_LABELS_PATH': os.path.join(root_dir, 'Dataset', 'Labels', 'y.RData'),
-    'PICKLES_DIR': os.path.join(root_dir, 'Pickles'),
         # Classifier model:
     'CSV_DIR': os.path.join(root_dir, 'Dataset', 'csv'),
     'TRAIN_CSV_DIR': os.path.join(root_dir, 'Dataset', 'csv', 'train'),
@@ -19,6 +18,7 @@ config_dict = {
     'CALIBRATE_CSV_DIR': os.path.join(root_dir, 'Dataset', 'csv', 'calibrate'),
     'CAL_BEST_STATES_DIR': os.path.join(root_dir, 'Saved_models', 'Best_calibration_weights'),
     'CAL_BEST_MODELS_DIR': os.path.join(root_dir, 'Saved_models', 'Best_calibration_models'),
+    'PROBS_PICKLES_DIR': os.path.join(root_dir, 'Probs', 'pickles'),
     
     # Hyperparams
         # General:
@@ -48,4 +48,11 @@ config_dict = {
     'CAL_FIRST_TIME': True,
     'cal_diff_threshold': 1e-2,
     'cal_max_patience': 3
+}
+
+SMOTE_config = {
+    'TAKE_MINOR_AT': 26,
+    'BALANCED_PICKLE_DIR': os.path.join(root_dir, 'Dataset', 'csv', 'balanced'),
+    'BALANCED_TRAIN_PICKLE_DIR': os.path.join(root_dir, 'Dataset', 'csv', 'balanced', 'train'),
+    'BALANCED_TEST_PICKLE_DIR': os.path.join(root_dir, 'Dataset', 'csv', 'balanced', 'test'),
 }

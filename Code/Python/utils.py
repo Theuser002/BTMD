@@ -25,7 +25,6 @@ def brier_score_tensor(logits, categorical_labels):
 
 def make_ndarray_from_csv(fold, mode = 'None'):
     cfg = config.config_dict
-    
     if mode.lower() == 'train':
         train_csv_path = os.path.join(cfg['TRAIN_CSV_DIR'], f'{fold}_train.csv')
         df_train = pd.read_csv(train_csv_path, index_col = 0).fillna(0)    
@@ -42,6 +41,20 @@ def make_ndarray_from_csv(fold, mode = 'None'):
 
         return test_features, test_labels
     
+    elif mode.lower() == 'all':
+        train_csv_path = os.path.join(cfg['TRAIN_CSV_DIR'], f'{fold}_train.csv')
+        df_train = pd.read_csv(train_csv_path, index_col = 0).fillna(0)    
+        train_features = np.array(df_train.iloc[:,:-1])
+        train_labels = np.array(df_train.iloc[:,-1])
+        test_csv_path = os.path.join(cfg['TEST_CSV_DIR'], f'{fold}_test.csv')
+        df_test = pd.read_csv(test_csv_path, index_col = 0).fillna(0)
+        test_features = np.array(df_test.iloc[:,:-1])
+        test_labels = np.array(df_test.iloc[:,-1])
+        features = np.append(train_features, test_features, axis = 0)
+        labels = np.append(train_labels, test_labels, axis = 0)
+        
+        return features, labels
+        
     else:        
         train_csv_path = os.path.join(cfg['TRAIN_CSV_DIR'], f'{fold}_train.csv')
         test_csv_path = os.path.join(cfg['TEST_CSV_DIR'], f'{fold}_test.csv')
