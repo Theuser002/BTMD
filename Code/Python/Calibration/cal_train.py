@@ -20,6 +20,7 @@ def dump_probs ():
     in_features = cfg['n_features']
     n_classes = cfg['n_classes']
     for i in range(1, 6):
+        # Outer fold
         outer_fold = f'{i}.0'
         all_probs = []
         all_labels = []
@@ -44,7 +45,6 @@ def dump_probs ():
             combined_prob = np.array(combined_prob)
             all_probs.append(combined_prob)
             all_labels.append(label)
-            # print('Cheese')
         with open (probs_pickle_filepath, 'wb') as handle:
             pickle.dump(all_probs, handle, protocol = pickle.HIGHEST_PROTOCOL)
         with open (labels_pickle_filepath, 'wb') as handle:

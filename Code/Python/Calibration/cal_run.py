@@ -28,6 +28,11 @@ if __name__ == "__main__":
     save = args.save
     cfg = config.config_dict
     
+    if cfg['CAL_FIRST_TIME'] == True:
+        print('Dumping probs for calibration model input')
+        cal_train.dump_probs()
+    
+    print('Training calibration models')
     for i in range(1, 6):
         outer_fold = f'{i}.0'
         
@@ -46,8 +51,8 @@ if __name__ == "__main__":
         # print(len(probs), len(int_labels), len(cal_train_dataset), len(cal_val_dataset))
         
         # Init model object
-        in_features = cfg['cal_n_features']
-        cal_model = CalNet((cfg['n_models'], cfg['n_classes']), cfg['cal_n_classes'])
+        # in_features = cfg['cal_n_features']
+        cal_model = CalNet((cfg['n_inner_folds'], cfg['n_classes']), cfg['cal_n_classes'])
         if cfg['CAL_FIRST_TIME'] == False:
             # Load model based on fold
             CAL_BEST_STATE_PATH = os.path.join(cfg['CAL_BEST_STATES_DIR'], f'{outer_fold}_best_cal_state.pth')
