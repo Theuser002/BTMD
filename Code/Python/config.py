@@ -8,7 +8,7 @@ config_dict = {
     # Paths:
         # General:
     'R_LABELS_PATH': os.path.join(root_dir, 'Dataset', 'Labels', 'y.RData'),
-    'PICKLES_DIR': os.path.join(root_dir, 'Pickles'),
+    'PROBS_PICKLES_DIR': os.path.join(root_dir, 'Probs', 'pickles'),
         # Classifier model:
     'CSV_DIR': os.path.join(root_dir, 'Dataset', 'csv'),
     'TRAIN_CSV_DIR': os.path.join(root_dir, 'Dataset', 'csv', 'train'),

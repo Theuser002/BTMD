@@ -15,7 +15,7 @@ from utils import make_ndarray_from_csv
 
 def dump_probs ():
     cfg = config.config_dict
-    PICKLES_DIR = cfg['PICKLES_DIR']
+    PROBS_PICKLES_DIR = cfg['PROBS_PICKLES_DIR']
     device = cfg['device']
     in_features = cfg['n_features']
     n_classes = cfg['n_classes']
@@ -25,8 +25,8 @@ def dump_probs ():
         all_labels = []
         probs_pickle_filename = f'{outer_fold}_combined_probs.pickle'
         labels_pickle_filename = f'{outer_fold}_combined_labels.pickle'
-        probs_pickle_filepath = os.path.join(PICKLES_DIR, probs_pickle_filename)
-        labels_pickle_filepath = os.path.join(PICKLES_DIR, labels_pickle_filename)
+        probs_pickle_filepath = os.path.join(PROBS_PICKLES_DIR, probs_pickle_filename)
+        labels_pickle_filepath = os.path.join(PROBS_PICKLES_DIR, labels_pickle_filename)
         features, labels = make_ndarray_from_csv(outer_fold, mode = 'train')
         for feature, label in zip(tqdm(features), labels):
             feature = torch.Tensor(feature).float()
@@ -54,11 +54,11 @@ def dump_probs ():
 def load_probs (outer_fold):
     print(f'Loading classification probabilities and labels from pickle file for fold {outer_fold}')
     cfg = config.config_dict
-    PICKLES_DIR = cfg['PICKLES_DIR']
+    PROBS_PICKLES_DIR = cfg['PROBS_PICKLES_DIR']
     probs_pickle_filename = f'{outer_fold}_combined_probs.pickle'
     labels_pickle_filename = f'{outer_fold}_combined_labels.pickle'
-    probs_pickle_filepath = os.path.join(PICKLES_DIR, probs_pickle_filename)
-    labels_pickle_filepath = os.path.join(PICKLES_DIR, labels_pickle_filename)
+    probs_pickle_filepath = os.path.join(PROBS_PICKLES_DIR, probs_pickle_filename)
+    labels_pickle_filepath = os.path.join(PROBS_PICKLES_DIR, labels_pickle_filename)
     
     with open(probs_pickle_filepath, 'rb') as handle:
         probs = pickle.load(handle)
