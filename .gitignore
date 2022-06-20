@@ -2,3 +2,4 @@
 *.pth
 *.RData
 *.pickle
+*.joblib
